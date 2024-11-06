@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models import models, schemas
-from .controllers import orders, resources, sandwiches, recipes
+from .controllers import orders, resources, sandwiches, recipes, order_details
 from .dependencies.database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -152,3 +152,36 @@ def delete_one_recipe(recipe_id: int, db: Session = Depends(get_db)):
     if recipe is None:
         raise HTTPException(status_code=404, detail="User not found")
     return recipes.delete(db=db, recipe_id=recipe_id)
+
+@app.post("/order_details/", response_model=schemas.OrderDetail, tags=["Order_Details"])
+def create_order_details(order_details: schemas.OrderDetailCreate, db: Session = Depends(get_db)):
+    return order_details.create(db=db, order_details=order_details)
+
+
+@app.get("/order_details/", response_model=list[schemas.OrderDetail], tags=["Order_Details"])
+def read_order_details(db: Session = Depends(get_db)):
+    return order_details.read_all(db)
+
+
+@app.get("/order_details/{order_details_id}", response_model=schemas.OrderDetail, tags=["Order_Details"])
+def read_one_order_details(order_details_id: int, db: Session = Depends(get_db)):
+    order_details = order_details.read_one(db, order_details_id=order_details_id)
+    if order_details is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return order_details
+
+
+@app.put("/order_details/{order_details_id}", response_model=schemas.OrderDetail, tags=["Order_Details"])
+def update_one_order_details(order_details_id: int, order_details: schemas.OrderDetailUpdate, db: Session = Depends(get_db)):
+    order_details_db = order_details.read_one(db, order_details_id=order_details_id)
+    if order_details_db is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return order_details.update(db=db, order_details=order_details, order_details_id=order_details_id)
+
+
+@app.delete("/order_details/{order_details_id}", tags=["Order_Details"])
+def delete_one_order_details(order_details_id: int, db: Session = Depends(get_db)):
+    order_details = order_details.read_one(db, order_details_id=order_details_id)
+    if order_details is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return order_details.delete(db=db, order_details_id=order_details_id)
